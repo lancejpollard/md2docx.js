@@ -74,6 +74,10 @@ export default async function md2docx(
   const doc = new Document({
     title: 'Sample Document',
     description: 'A brief example of using docx',
+    compatibility: {
+      useNormalStyleForList: true,
+      // noTabStopForHangingIndent: true,
+    },
     numbering: {
       config: [
         {
@@ -88,6 +92,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 0),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -101,6 +106,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 1),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -113,7 +119,8 @@ export default async function md2docx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(INDENT * 2),
+                    left: convertInchesToTwip(INDENT * 1),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -127,6 +134,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 3),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -140,6 +148,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 4),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -158,6 +167,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 0),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -171,6 +181,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 1),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -183,7 +194,8 @@ export default async function md2docx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(INDENT * 2),
+                    left: convertInchesToTwip(INDENT * 1),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -197,6 +209,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 3),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -210,6 +223,7 @@ export default async function md2docx(
                 paragraph: {
                   indent: {
                     left: convertInchesToTwip(INDENT * 4),
+                    hanging: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -257,7 +271,7 @@ export default async function md2docx(
           ),
           paragraph: {
             spacing: {
-              before: convertInchesToTwip(INDENT * 2),
+              before: convertInchesToTwip(INDENT * 1),
               after: convertInchesToTwip(INDENT * 1),
             },
           },
@@ -278,7 +292,7 @@ export default async function md2docx(
           ),
           paragraph: {
             spacing: {
-              before: convertInchesToTwip(INDENT * 2),
+              before: convertInchesToTwip(INDENT * 1),
               after: convertInchesToTwip(INDENT * 1),
             },
           },
@@ -299,7 +313,7 @@ export default async function md2docx(
           ),
           paragraph: {
             spacing: {
-              before: convertInchesToTwip(INDENT * 2),
+              before: convertInchesToTwip(INDENT * 1),
               after: convertInchesToTwip(INDENT * 1),
             },
           },
@@ -320,7 +334,7 @@ export default async function md2docx(
           ),
           paragraph: {
             spacing: {
-              before: convertInchesToTwip(INDENT * 2),
+              before: convertInchesToTwip(INDENT * 1),
               after: convertInchesToTwip(INDENT * 1),
             },
           },
@@ -341,7 +355,7 @@ export default async function md2docx(
           ),
           paragraph: {
             spacing: {
-              before: convertInchesToTwip(INDENT * 2),
+              before: convertInchesToTwip(INDENT * 1),
               after: convertInchesToTwip(INDENT * 1),
             },
           },
