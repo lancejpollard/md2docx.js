@@ -337,5 +337,5 @@ const doc = new Document({
 })
 
 Packer.toBuffer(doc).then(buffer => {
-  fs.writeFileSync('tmp/md.docx', buffer)
+  fs.writeFileSync('test/md.docx', buffer)
 })
