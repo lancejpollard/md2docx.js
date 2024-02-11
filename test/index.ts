@@ -19,6 +19,8 @@ _**bold with italics**_.
     1. one
     2. two
 
+Then this:
+
 1. a
 2. b
 
@@ -27,7 +29,7 @@ _**bold with italics**_.
 ## **h2 _italics_** and more
 
 `,
-  'buffer',
+  { output: 'buffer' },
 ).then(buffer => {
   if (buffer instanceof Buffer) {
     fs.writeFileSync('test/md.docx', buffer)

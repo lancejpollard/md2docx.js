@@ -1,4 +1,3 @@
-import { marked } from 'marked'
 import {
   Packer,
   Paragraph,
@@ -11,6 +10,7 @@ import {
   convertInchesToTwip,
   LevelFormat,
 } from 'docx'
+import { fromMarkdown } from 'mdast-util-from-markdown'
 
 // new ImageRun({
 //   data: Buffer.from(imageBase64Data, 'base64'),
@@ -20,223 +20,33 @@ import {
 //   },
 // })
 
-export type Encoding = 'buffer' | 'blob' | 'base64'
+export type Output = 'buffer' | 'blob' | 'base64'
 
-export default async function md2docx<E extends Encoding>(
+export type Options = {
+  output: Output
+}
+
+const INDENT = 0.17
+
+const HEADING: Record<number, any> = {
+  1: HeadingLevel.HEADING_1,
+  2: HeadingLevel.HEADING_2,
+  3: HeadingLevel.HEADING_3,
+  4: HeadingLevel.HEADING_4,
+  5: HeadingLevel.HEADING_5,
+  6: HeadingLevel.HEADING_6,
+}
+
+export default async function md2docx(
   text: string,
-  encoding: E,
+  options: Options = { output: 'buffer' },
 ) {
-  const document: Array<any> = []
+  const node = fromMarkdown(text)
+  const json = walk(node)
+  const children = json.map(child => convert(child))
 
-  const HEADING: Record<number, any> = {
-    1: HeadingLevel.HEADING_1,
-    2: HeadingLevel.HEADING_2,
-    3: HeadingLevel.HEADING_3,
-    4: HeadingLevel.HEADING_4,
-    5: HeadingLevel.HEADING_5,
-    6: HeadingLevel.HEADING_6,
-  }
-
-  // Override function
-  const walkTokens = token => {
-    switch (token.type) {
-      case 'space':
-        document.push(new TextRun({ text: token.raw }))
-        break
-      case 'list':
-        document.push(
-          ...walkList(token, { depth: 0, ordered: token.ordered }),
-        )
-        break
-      case 'heading':
-        document.push(walkHeading(token))
-        break
-      case 'paragraph': {
-        const children: Array<any> = []
-        token.tokens.forEach(child => {
-          children.push(
-            ...walkText(child, { italics: false, bold: false }),
-          )
-        })
-        children.push(new Run({ break: 1 }))
-        const p = new Paragraph({ children })
-        document.push(p)
-        break
-      }
-    }
-  }
-
-  const walkHeading = token => {
-    const heading = HEADING[token.depth]
-    const children: Array<any> = []
-
-    token.tokens.forEach(child => {
-      switch (child.type) {
-        case 'text':
-          children.push(new TextRun({ text: child.text }))
-          break
-        case 'link':
-          children.push(
-            walkLink(token, { italics: false, bold: false }),
-          )
-          break
-        case 'em':
-          children.push(...walkEm(token, { bold: false }))
-          break
-        case 'strong':
-          children.push(...walkStrong(token, { italics: false }))
-          break
-      }
-    })
-
-    children.push(new Run({ break: 1 }))
-
-    return new Paragraph({ heading, children })
-  }
-
-  const walkStrong = (token, { italics }) => {
-    const children: Array<any> = []
-
-    token.tokens.forEach(child => {
-      switch (child.type) {
-        case 'text':
-          children.push(
-            new TextRun({ text: child.text, bold: true, italics }),
-          )
-          break
-        case 'link':
-          children.push(walkLink(token, { italics, bold: true }))
-          break
-        case 'em':
-          children.push(...walkEm(token, { bold: true }))
-          break
-      }
-    })
-
-    return children
-  }
-
-  const walkEm = (token, { bold }) => {
-    const children: Array<any> = []
-
-    token.tokens.forEach(child => {
-      switch (child.type) {
-        case 'text':
-          children.push(
-            new TextRun({ text: child.text, bold, italics: true }),
-          )
-          break
-        case 'link':
-          children.push(walkLink(token, { italics: true, bold }))
-          break
-        case 'strong':
-          children.push(...walkStrong(token, { italics: true }))
-          break
-      }
-    })
-
-    return children
-  }
-
-  const walkLink = (token, { italics, bold }) => {
-    const children: Array<any> = []
-    token.tokens.forEach(child => {
-      switch (child.type) {
-        case 'text':
-          children.push(
-            new TextRun({ text: child.text, italics, bold }),
-          )
-          break
-        case 'em':
-          children.push(...walkEm(token, { bold }))
-          break
-        case 'strong':
-          children.push(...walkStrong(token, { italics }))
-          break
-      }
-    })
-    return new ExternalHyperlink({ link: token.href, children })
-  }
-
-  const walkText = (token, { italics, bold }) => {
-    const children: Array<any> = []
-    if (token.tokens?.length) {
-      token.tokens.forEach(child => {
-        switch (child.type) {
-          case 'text':
-            children.push(new TextRun({ text: child.text }))
-            break
-          case 'link':
-            children.push(walkLink(token, { italics, bold }))
-            break
-          case 'em':
-            children.push(...walkEm(token, { bold }))
-            break
-          case 'strong':
-            children.push(...walkStrong(token, { italics }))
-            break
-        }
-      })
-    } else {
-      children.push(new TextRun({ text: token.text }))
-    }
-    return children
-  }
-
-  const walkList = (token, { ordered, depth = 0 }) => {
-    const children: Array<any> = []
-    token.items.forEach(item => {
-      children.push(walkListItem(item, { ordered, depth }))
-    })
-    // children.push(new TextRun({ break: 2 }))
-    return children
-  }
-
-  const walkListItem = (token, { ordered, depth = 0 }) => {
-    const opts = ordered
-      ? {
-          numbering: {
-            reference: `number`,
-            level: depth,
-          },
-        }
-      : {
-          numbering: {
-            reference: `bullet`,
-            level: depth,
-          },
-        }
-    // : {
-    //     bullet: {
-    //       level: depth,
-    //     },
-    //   }
-    const children: Array<any> = []
-
-    token.tokens.forEach(child => {
-      switch (child.type) {
-        case 'text':
-          children.push(
-            ...walkText(child, { italics: false, bold: false }),
-          )
-          break
-        case 'list':
-          children.push(
-            ...walkList(child, {
-              ordered: child.ordered,
-              depth: depth + 1,
-            }),
-          )
-          break
-      }
-    })
-
-    return new Paragraph({ ...opts, children })
-  }
-
-  marked.use({ walkTokens })
-
-  marked.parse(text)
+  // console.log(JSON.stringify(json, null, 2))
+  // return
 
   const doc = new Document({
     title: 'Sample Document',
@@ -253,9 +63,11 @@ export default async function md2docx<E extends Encoding>(
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
+                  // spacing: {
+                  //   before: 100,
+                  // },
                   indent: {
-                    left: convertInchesToTwip(0.5),
-                    hanging: convertInchesToTwip(0.25),
+                    left: convertInchesToTwip(INDENT * 0),
                   },
                 },
               },
@@ -268,8 +80,7 @@ export default async function md2docx<E extends Encoding>(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(1),
-                    hanging: convertInchesToTwip(0.25),
+                    left: convertInchesToTwip(INDENT * 1),
                   },
                 },
               },
@@ -282,8 +93,7 @@ export default async function md2docx<E extends Encoding>(
               style: {
                 paragraph: {
                   indent: {
-                    left: 2160,
-                    hanging: convertInchesToTwip(0.25),
+                    left: convertInchesToTwip(INDENT * 2),
                   },
                 },
               },
@@ -296,8 +106,7 @@ export default async function md2docx<E extends Encoding>(
               style: {
                 paragraph: {
                   indent: {
-                    left: 2880,
-                    hanging: convertInchesToTwip(0.25),
+                    left: convertInchesToTwip(INDENT * 3),
                   },
                 },
               },
@@ -310,8 +119,7 @@ export default async function md2docx<E extends Encoding>(
               style: {
                 paragraph: {
                   indent: {
-                    left: 3600,
-                    hanging: convertInchesToTwip(0.25),
+                    left: convertInchesToTwip(INDENT * 4),
                   },
                 },
               },
@@ -328,29 +136,35 @@ export default async function md2docx<E extends Encoding>(
               alignment: AlignmentType.START,
               style: {
                 paragraph: {
-                  indent: { left: 720, hanging: 260 },
+                  indent: {
+                    left: convertInchesToTwip(INDENT * 0),
+                  },
                 },
               },
             },
             {
               level: 1,
-              format: 'lowerLetter',
-              text: '%2)',
+              format: 'decimal',
+              text: '%2.',
               alignment: AlignmentType.START,
               style: {
                 paragraph: {
-                  indent: { left: 1440, hanging: 980 },
+                  indent: {
+                    left: convertInchesToTwip(INDENT * 1),
+                  },
                 },
               },
             },
             {
               level: 2,
-              format: 'upperLetter',
-              text: '%3)',
+              format: 'decimal',
+              text: '%3.',
               alignment: AlignmentType.START,
               style: {
                 paragraph: {
-                  indent: { left: 2160, hanging: 1700 },
+                  indent: {
+                    left: convertInchesToTwip(INDENT * 2),
+                  },
                 },
               },
             },
@@ -361,7 +175,22 @@ export default async function md2docx<E extends Encoding>(
               alignment: AlignmentType.START,
               style: {
                 paragraph: {
-                  indent: { left: 2880, hanging: 2420 },
+                  indent: {
+                    left: convertInchesToTwip(INDENT * 3),
+                  },
+                },
+              },
+            },
+            {
+              level: 4,
+              format: 'decimal',
+              text: '%5.',
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: convertInchesToTwip(INDENT * 4),
+                  },
                 },
               },
             },
@@ -457,12 +286,12 @@ export default async function md2docx<E extends Encoding>(
     },
     sections: [
       {
-        children: document,
+        children: children as Array<Paragraph>,
       },
     ],
   })
 
-  switch (encoding) {
+  switch (options.output) {
     case 'buffer':
       return await Packer.toBuffer(doc)
     case 'blob':
@@ -470,4 +299,264 @@ export default async function md2docx<E extends Encoding>(
   }
 
   return await Packer.toBase64String(doc)
+
+  function walk(node) {
+    const children: Array<any> = []
+    node.children.forEach(child => {
+      children.push(...walkChild(child))
+    })
+    return children
+  }
+
+  // Override function
+  function walkChild(node) {
+    // console.log(node)
+    const children: Array<any> = []
+    switch (node.type) {
+      case 'break':
+        children.push({ type: 'run', break: 1 })
+        break
+      case 'list':
+        children.push(
+          ...walkList(node, { depth: 0, ordered: node.ordered }),
+        )
+        break
+      case 'heading':
+        children.push(walkHeading(node))
+        break
+      case 'paragraph': {
+        children.push(walkParagraph(node))
+        break
+      }
+    }
+    return children
+  }
+
+  function walkParagraph(node) {
+    const children: Array<any> = []
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'text':
+          children.push({ type: 'text', text: child.value })
+          break
+        case 'link':
+          children.push(
+            walkLink(child, { italics: false, bold: false }),
+          )
+          break
+        case 'emphasis':
+          children.push(...walkEm(child, { bold: false }))
+          break
+        case 'strong':
+          children.push(...walkStrong(child, { italics: false }))
+          break
+      }
+    })
+    children.push({ type: 'run', break: 1 })
+    return { type: 'paragraph', children }
+  }
+
+  function walkHeading(node) {
+    const heading = HEADING[node.depth]
+    const children: Array<any> = []
+
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'text':
+          children.push({ type: 'text', text: child.value })
+          break
+        case 'link':
+          children.push(
+            walkLink(child, { italics: false, bold: false }),
+          )
+          break
+        case 'emphasis':
+          children.push(...walkEm(child, { bold: false }))
+          break
+        case 'strong':
+          children.push(...walkStrong(child, { italics: false }))
+          break
+      }
+    })
+
+    // children.push({ type: 'run', break: 1 })
+
+    return { type: 'paragraph', heading, children }
+  }
+
+  function walkStrong(node, { italics }) {
+    const children: Array<any> = []
+
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'text':
+          children.push({
+            type: 'text',
+            text: child.value,
+            bold: true,
+            italics,
+          })
+          break
+        case 'link':
+          children.push(walkLink(child, { italics, bold: true }))
+          break
+        case 'emphasis':
+          children.push(...walkEm(child, { bold: true }))
+          break
+      }
+    })
+
+    return children
+  }
+
+  function walkEm(node, { bold }) {
+    const children: Array<any> = []
+
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'text':
+          children.push({
+            type: 'text',
+            text: child.value,
+            bold,
+            italics: true,
+          })
+          break
+        case 'link':
+          children.push(walkLink(child, { italics: true, bold }))
+          break
+        case 'strong':
+          children.push(...walkStrong(child, { italics: true }))
+          break
+      }
+    })
+
+    return children
+  }
+
+  function walkLink(node, { italics, bold }) {
+    const children: Array<any> = []
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'text':
+          children.push({
+            type: 'text',
+            text: child.value,
+            italics,
+            bold,
+          })
+          break
+        case 'emphasis':
+          children.push(...walkEm(child, { bold }))
+          break
+        case 'strong':
+          children.push(...walkStrong(child, { italics }))
+          break
+      }
+    })
+    return { type: 'link', link: node.url, children }
+  }
+
+  function walkText(node, { italics, bold }) {
+    const children: Array<any> = []
+    if (node.children?.length) {
+      node.children.forEach(child => {
+        switch (child.type) {
+          case 'text':
+            children.push({ type: 'text', text: child.value })
+            break
+          case 'link':
+            children.push(walkLink(child, { italics, bold }))
+            break
+          case 'emphasis':
+            children.push(...walkEm(child, { bold }))
+            break
+          case 'strong':
+            children.push(...walkStrong(child, { italics }))
+            break
+        }
+      })
+    } else {
+      children.push({ type: 'text', text: node.value })
+    }
+    return children
+  }
+
+  function walkList(node, { ordered, depth = 0 }) {
+    const children: Array<any> = []
+    node.children.forEach(item => {
+      children.push(...walkListItem(item, { ordered, depth }))
+    })
+    if (depth === 0) {
+      children.push({ type: 'run', break: 1 })
+    }
+    return children
+  }
+
+  function walkListItem(node, { ordered, depth = 0 }) {
+    const opts = ordered
+      ? {
+          numbering: {
+            reference: `number`,
+            level: depth,
+          },
+        }
+      : {
+          numbering: {
+            reference: `bullet`,
+            level: depth,
+          },
+        }
+    // : {
+    //     bullet: {
+    //       level: depth,
+    //     },
+    //   }
+    const items: Array<any> = []
+    const children: Array<any> = []
+
+    console.log(node.children)
+
+    node.children.forEach(child => {
+      switch (child.type) {
+        case 'paragraph':
+          children.push(
+            ...walkText(child, { italics: false, bold: false }),
+          )
+          break
+        case 'list':
+          items.push(
+            ...walkList(child, {
+              ordered: child.ordered,
+              depth: depth + 1,
+            }),
+          )
+          break
+      }
+    })
+
+    items.unshift({ type: 'paragraph', ...opts, children })
+    return items
+  }
+
+  function convert(child) {
+    // console.log(child)
+    switch (child.type) {
+      case 'text':
+        return new TextRun(child)
+      case 'paragraph':
+        return new Paragraph({
+          ...child,
+          children: child.children.map(convert),
+        })
+      case 'run':
+        console.log(child)
+        return new Run(child)
+      case 'link':
+        return new ExternalHyperlink({
+          ...child,
+          children: child.children.map(convert),
+        })
+    }
+  }
 }
