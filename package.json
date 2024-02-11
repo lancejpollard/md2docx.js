@@ -5,7 +5,8 @@
   "scripts": {
     "make": "tsc && tsc-alias",
     "scan": "concurrently --kill-others \"tsc -w\" \"tsc-alias -w\"",
-    "host": "rm -rf host && mkdir host && npm publish --access=public"
+    "host": "rm -rf host && mkdir host && npm publish --access=public",
+    "test": "pnpm tsx test"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.191",
