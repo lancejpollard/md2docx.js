@@ -8,6 +8,8 @@ import {
   ExternalHyperlink,
   AlignmentType,
   Run,
+  convertInchesToTwip,
+  LevelFormat,
 } from 'docx'
 
 // new ImageRun({
@@ -194,15 +196,21 @@ export default async function md2docx<E extends Encoding>(
     const opts = ordered
       ? {
           numbering: {
-            reference: `my-crazy-numbering`,
+            reference: `number`,
             level: depth,
           },
         }
       : {
-          bullet: {
+          numbering: {
+            reference: `bullet`,
             level: depth,
           },
         }
+    // : {
+    //     bullet: {
+    //       level: depth,
+    //     },
+    //   }
     const children: Array<any> = []
 
     token.tokens.forEach(child => {
@@ -236,7 +244,82 @@ export default async function md2docx<E extends Encoding>(
     numbering: {
       config: [
         {
-          reference: 'my-crazy-numbering',
+          reference: 'bullet',
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: '*',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: convertInchesToTwip(0.5),
+                    hanging: convertInchesToTwip(0.25),
+                  },
+                },
+              },
+            },
+            {
+              level: 1,
+              format: LevelFormat.BULLET,
+              text: '*',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: convertInchesToTwip(1),
+                    hanging: convertInchesToTwip(0.25),
+                  },
+                },
+              },
+            },
+            {
+              level: 2,
+              format: LevelFormat.BULLET,
+              text: '*',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: 2160,
+                    hanging: convertInchesToTwip(0.25),
+                  },
+                },
+              },
+            },
+            {
+              level: 3,
+              format: LevelFormat.BULLET,
+              text: '*',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: 2880,
+                    hanging: convertInchesToTwip(0.25),
+                  },
+                },
+              },
+            },
+            {
+              level: 4,
+              format: LevelFormat.BULLET,
+              text: '*',
+              alignment: AlignmentType.LEFT,
+              style: {
+                paragraph: {
+                  indent: {
+                    left: 3600,
+                    hanging: convertInchesToTwip(0.25),
+                  },
+                },
+              },
+            },
+          ],
+        },
+        {
+          reference: 'number',
           levels: [
             {
               level: 0,
