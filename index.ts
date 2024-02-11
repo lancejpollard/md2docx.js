@@ -62,7 +62,7 @@ export type Styles = {
 
 export default async function md2docx(
   text: string,
-  options: Options = { output: 'buffer', style: Styles },
+  options: Options = { output: 'buffer' },
 ) {
   const node = fromMarkdown(text)
   const json = walk(node)
