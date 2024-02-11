@@ -598,8 +598,8 @@ export default async function md2docx(
 
   function walkList(node, { ordered, depth = 0 }) {
     const children: Array<any> = []
-    node.children.forEach(item => {
-      children.push(...walkListItem(item, { ordered, depth }))
+    node.children.forEach((item, index) => {
+      children.push(...walkListItem(item, { ordered, depth, index }))
     })
     if (depth === 0) {
       children.push({ type: 'paragraph', children: [] })
@@ -607,25 +607,27 @@ export default async function md2docx(
     return children
   }
 
-  function walkListItem(node, { ordered, depth = 0 }) {
+  function walkListItem(node, { ordered, depth = 0, index }) {
     const opts = ordered
       ? {
+          // start: index + 1,
           numbering: {
             reference: `number`,
             level: depth,
           },
         }
-      : {
-          numbering: {
-            reference: `bullet`,
+      : // : {
+        //     // start: index + 1,
+        //     numbering: {
+        //       reference: `bullet`,
+        //       level: depth,
+        //     },
+        //   }
+        {
+          bullet: {
             level: depth,
           },
         }
-    // : {
-    //     bullet: {
-    //       level: depth,
-    //     },
-    //   }
     const items: Array<any> = []
     const children: Array<any> = []
 

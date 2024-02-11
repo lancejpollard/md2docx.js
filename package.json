@@ -1,6 +1,6 @@
 {
   "name": "@lancejpollard/md2docx",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "make": "tsc && tsc-alias",
