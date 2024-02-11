@@ -11,6 +11,7 @@ import {
   LevelFormat,
 } from 'docx'
 import { fromMarkdown } from 'mdast-util-from-markdown'
+// https://github.com/inokawa/remark-docx/blob/main/src/plugin.ts
 
 // new ImageRun({
 //   data: Buffer.from(imageBase64Data, 'base64'),
@@ -59,7 +60,7 @@ export default async function md2docx(
             {
               level: 0,
               format: LevelFormat.BULLET,
-              text: '*',
+              text: '•',
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
@@ -75,7 +76,7 @@ export default async function md2docx(
             {
               level: 1,
               format: LevelFormat.BULLET,
-              text: '*',
+              text: '•',
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
@@ -88,7 +89,7 @@ export default async function md2docx(
             {
               level: 2,
               format: LevelFormat.BULLET,
-              text: '*',
+              text: '•',
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
@@ -101,7 +102,7 @@ export default async function md2docx(
             {
               level: 3,
               format: LevelFormat.BULLET,
-              text: '*',
+              text: '•',
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
@@ -114,7 +115,7 @@ export default async function md2docx(
             {
               level: 4,
               format: LevelFormat.BULLET,
-              text: '*',
+              text: '•',
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
@@ -207,14 +208,14 @@ export default async function md2docx(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 32,
-            bold: true,
-            italics: true,
-            color: '#ff0000',
+            size: '32pt',
+            // bold: true,
+            // italics: true,
+            // color: '#ff0000',
           },
           paragraph: {
             spacing: {
-              after: 120,
+              after: convertInchesToTwip(INDENT * 1),
             },
           },
         },
@@ -225,13 +226,13 @@ export default async function md2docx(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 28,
-            bold: true,
+            size: '28pt',
+            // bold: true,
           },
           paragraph: {
             spacing: {
-              before: 240,
-              after: 120,
+              before: convertInchesToTwip(INDENT * 2),
+              after: convertInchesToTwip(INDENT * 1),
             },
           },
         },
@@ -242,13 +243,12 @@ export default async function md2docx(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 24,
-            bold: true,
+            size: '24pt',
           },
           paragraph: {
             spacing: {
-              before: 240,
-              after: 120,
+              before: convertInchesToTwip(INDENT * 2),
+              after: convertInchesToTwip(INDENT * 1),
             },
           },
         },
@@ -259,29 +259,25 @@ export default async function md2docx(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 20,
-            bold: true,
+            size: '20pt',
           },
           paragraph: {
             spacing: {
-              before: 240,
-              after: 120,
+              before: convertInchesToTwip(INDENT * 2),
+              after: convertInchesToTwip(INDENT * 1),
             },
           },
         },
-        // {
-        //   id: 'paragraph',
-        //   name: 'Paragraph',
-        //   basedOn: 'Normal',
-        //   quickFormat: true,
-        //   paragraph: {
-        //     spacing: {
-        //       line: 276,
-        //       before: 20 * 72 * 0.1,
-        //       after: 20 * 72 * 0.05,
-        //     },
-        //   },
-        // },
+        {
+          id: 'Text',
+          name: 'Text',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: {
+            size: '16pt',
+          },
+        },
       ],
     },
     sections: [
@@ -314,7 +310,7 @@ export default async function md2docx(
     const children: Array<any> = []
     switch (node.type) {
       case 'break':
-        children.push({ type: 'run', break: 1 })
+        children.push({ type: 'paragraph', children: [] })
         break
       case 'list':
         children.push(
@@ -322,10 +318,10 @@ export default async function md2docx(
         )
         break
       case 'heading':
-        children.push(walkHeading(node))
+        children.push(...walkHeading(node))
         break
       case 'paragraph': {
-        children.push(walkParagraph(node))
+        children.push(...walkParagraph(node))
         break
       }
     }
@@ -352,8 +348,10 @@ export default async function md2docx(
           break
       }
     })
-    children.push({ type: 'run', break: 1 })
-    return { type: 'paragraph', children }
+    return [
+      { type: 'paragraph', children, style: 'Text' },
+      { type: 'paragraph', children: [] },
+    ]
   }
 
   function walkHeading(node) {
@@ -379,9 +377,10 @@ export default async function md2docx(
       }
     })
 
-    // children.push({ type: 'run', break: 1 })
-
-    return { type: 'paragraph', heading, children }
+    return [
+      { type: 'paragraph', heading, children },
+      { type: 'paragraph', children: [] },
+    ]
   }
 
   function walkStrong(node, { italics }) {
@@ -488,7 +487,7 @@ export default async function md2docx(
       children.push(...walkListItem(item, { ordered, depth }))
     })
     if (depth === 0) {
-      children.push({ type: 'run', break: 1 })
+      children.push({ type: 'paragraph', children: [] })
     }
     return children
   }
@@ -515,8 +514,6 @@ export default async function md2docx(
     const items: Array<any> = []
     const children: Array<any> = []
 
-    console.log(node.children)
-
     node.children.forEach(child => {
       switch (child.type) {
         case 'paragraph':
@@ -535,22 +532,27 @@ export default async function md2docx(
       }
     })
 
-    items.unshift({ type: 'paragraph', ...opts, children })
+    items.unshift({
+      type: 'paragraph',
+      ...opts,
+      children,
+      style: 'Text',
+    })
     return items
   }
 
   function convert(child) {
-    // console.log(child)
     switch (child.type) {
       case 'text':
-        return new TextRun(child)
+        return new TextRun({
+          ...child,
+        })
       case 'paragraph':
         return new Paragraph({
           ...child,
           children: child.children.map(convert),
         })
       case 'run':
-        console.log(child)
         return new Run(child)
       case 'link':
         return new ExternalHyperlink({
