@@ -11,6 +11,7 @@ import {
   LevelFormat,
 } from 'docx'
 import { fromMarkdown } from 'mdast-util-from-markdown'
+import merge from 'lodash.merge'
 // https://github.com/inokawa/remark-docx/blob/main/src/plugin.ts
 
 // new ImageRun({
@@ -25,9 +26,12 @@ export type Output = 'buffer' | 'blob' | 'base64'
 
 export type Options = {
   output: Output
+  style?: Styles
 }
 
-const INDENT = 0.17
+const INDENT = 0.17 // 16px in inches
+const COLOR = '#0f172a'
+const FONT = 'Helvetica'
 
 const HEADING: Record<number, any> = {
   1: HeadingLevel.HEADING_1,
@@ -38,9 +42,27 @@ const HEADING: Record<number, any> = {
   6: HeadingLevel.HEADING_6,
 }
 
+export type Style = {
+  font?: string
+  size?: string
+  color?: string
+  allCaps?: boolean
+  characterSpacing?: number
+}
+
+export type Styles = {
+  h1: Style
+  h2: Style
+  h3: Style
+  h4: Style
+  h5: Style
+  h6: Style
+  text: Style
+}
+
 export default async function md2docx(
   text: string,
-  options: Options = { output: 'buffer' },
+  options: Options = { output: 'buffer', style: Styles },
 ) {
   const node = fromMarkdown(text)
   const json = walk(node)
@@ -64,9 +86,6 @@ export default async function md2docx(
               alignment: AlignmentType.LEFT,
               style: {
                 paragraph: {
-                  // spacing: {
-                  //   before: 100,
-                  // },
                   indent: {
                     left: convertInchesToTwip(INDENT * 0),
                   },
@@ -207,12 +226,15 @@ export default async function md2docx(
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: {
-            size: '32pt',
-            // bold: true,
-            // italics: true,
-            // color: '#ff0000',
-          },
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '36pt',
+              bold: true,
+            },
+            options.style?.h1,
+          ),
           paragraph: {
             spacing: {
               after: convertInchesToTwip(INDENT * 1),
@@ -225,10 +247,14 @@ export default async function md2docx(
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: {
-            size: '28pt',
-            // bold: true,
-          },
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '32pt',
+            },
+            options.style?.h2,
+          ),
           paragraph: {
             spacing: {
               before: convertInchesToTwip(INDENT * 2),
@@ -242,9 +268,14 @@ export default async function md2docx(
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: {
-            size: '24pt',
-          },
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '28pt',
+            },
+            options.style?.h3,
+          ),
           paragraph: {
             spacing: {
               before: convertInchesToTwip(INDENT * 2),
@@ -258,9 +289,56 @@ export default async function md2docx(
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: {
-            size: '20pt',
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '24pt',
+            },
+            options.style?.h4,
+          ),
+          paragraph: {
+            spacing: {
+              before: convertInchesToTwip(INDENT * 2),
+              after: convertInchesToTwip(INDENT * 1),
+            },
           },
+        },
+        {
+          id: 'Heading5',
+          name: 'Heading 5',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '22pt',
+            },
+            options.style?.h5,
+          ),
+          paragraph: {
+            spacing: {
+              before: convertInchesToTwip(INDENT * 2),
+              after: convertInchesToTwip(INDENT * 1),
+            },
+          },
+        },
+        {
+          id: 'Heading6',
+          name: 'Heading 6',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '20pt',
+            },
+            options.style?.h6,
+          ),
           paragraph: {
             spacing: {
               before: convertInchesToTwip(INDENT * 2),
@@ -274,9 +352,31 @@ export default async function md2docx(
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: {
-            size: '16pt',
-          },
+          run: merge(
+            {
+              color: COLOR,
+              font: FONT,
+              size: '16pt',
+            },
+            options.style?.text,
+          ),
+        },
+        {
+          id: 'Link',
+          name: 'Link',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: merge(
+            {
+              color: '#2563eb',
+              font: FONT,
+              underline: {
+                color: options.style?.text?.color ?? '#2563eb',
+              },
+            },
+            options.style?.text,
+          ),
         },
       ],
     },
@@ -443,6 +543,7 @@ export default async function md2docx(
             text: child.value,
             italics,
             bold,
+            style: 'Link',
           })
           break
         case 'emphasis':
