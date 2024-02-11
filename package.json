@@ -1,0 +1,34 @@
+{
+  "name": "@lancejpollard/md2docx.js",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "make": "tsc && tsc-alias",
+    "scan": "concurrently --kill-others \"tsc -w\" \"tsc-alias -w\"",
+    "host": "rm -rf host && mkdir host && npm publish --access=public"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "@types/prettier": "^2.7.2",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "autoprefixer": "^10.4.16",
+    "csstype": "^3.1.1",
+    "eslint": "8.32.0",
+    "eslint-config-next": "13.1.5",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-config-standard-with-typescript": "^27.0.1",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-import": "^2.27.4",
+    "eslint-plugin-n": "^15.6.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
+    "eslint-plugin-sort-exports": "^0.8.0",
+    "eslint-plugin-sort-keys": "^2.3.5",
+    "eslint-plugin-typescript-sort-keys": "^2.1.0",
+    "prettier": "^3.2.5",
+    "ts-loader": "^9.5.1",
+    "tsx": "^4.7.0"
+  }
+}
