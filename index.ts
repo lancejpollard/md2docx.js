@@ -10,6 +10,14 @@ import {
   Run,
 } from 'docx'
 
+// new ImageRun({
+//   data: Buffer.from(imageBase64Data, 'base64'),
+//   transformation: {
+//     width: 100,
+//     height: 100,
+//   },
+// })
+
 export type Encoding = 'buffer' | 'blob' | 'base64'
 
 export default async function md2docx<E extends Encoding>(
@@ -78,6 +86,8 @@ export default async function md2docx<E extends Encoding>(
           break
       }
     })
+
+    children.push(new Run({ break: 1 }))
 
     return new Paragraph({ heading, children })
   }
@@ -176,9 +186,7 @@ export default async function md2docx<E extends Encoding>(
     token.items.forEach(item => {
       children.push(walkListItem(item, { ordered, depth }))
     })
-    if (depth === 0) {
-      children.push(new Run({ break: 2 }))
-    }
+    // children.push(new TextRun({ break: 2 }))
     return children
   }
 
@@ -287,7 +295,7 @@ export default async function md2docx<E extends Encoding>(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 28,
+            size: 32,
             bold: true,
             italics: true,
             color: '#ff0000',
@@ -305,7 +313,7 @@ export default async function md2docx<E extends Encoding>(
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 26,
+            size: 28,
             bold: true,
           },
           paragraph: {
@@ -315,6 +323,53 @@ export default async function md2docx<E extends Encoding>(
             },
           },
         },
+        {
+          id: 'Heading3',
+          name: 'Heading 3',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: {
+            size: 24,
+            bold: true,
+          },
+          paragraph: {
+            spacing: {
+              before: 240,
+              after: 120,
+            },
+          },
+        },
+        {
+          id: 'Heading4',
+          name: 'Heading 4',
+          basedOn: 'Normal',
+          next: 'Normal',
+          quickFormat: true,
+          run: {
+            size: 20,
+            bold: true,
+          },
+          paragraph: {
+            spacing: {
+              before: 240,
+              after: 120,
+            },
+          },
+        },
+        // {
+        //   id: 'paragraph',
+        //   name: 'Paragraph',
+        //   basedOn: 'Normal',
+        //   quickFormat: true,
+        //   paragraph: {
+        //     spacing: {
+        //       line: 276,
+        //       before: 20 * 72 * 0.1,
+        //       after: 20 * 72 * 0.05,
+        //     },
+        //   },
+        // },
       ],
     },
     sections: [

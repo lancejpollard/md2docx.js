@@ -16,6 +16,10 @@
 <br/>
 <br/>
 
+## Status
+
+This is a new project and I [need some help](https://github.com/dolanmiu/docx/discussions/2589) with styling it to look nice, haven't fully figured out the `docx` API. But it is a pretty good start!
+
 ## Installation
 
 ```
