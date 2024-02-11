@@ -1,11 +1,11 @@
 {
-  "name": "@lancejpollard/md2docx.js",
-  "version": "0.0.1",
+  "name": "@lancejpollard/md2docx",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "make": "tsc && tsc-alias",
     "scan": "concurrently --kill-others \"tsc -w\" \"tsc-alias -w\"",
-    "host": "rm -rf host && mkdir host && npm publish --access=public",
+    "host": "rm -rf host && mkdir host && pnpm make && npm publish --access=public",
     "test": "pnpm tsx test"
   },
   "devDependencies": {
@@ -30,6 +30,8 @@
     "eslint-plugin-typescript-sort-keys": "^2.1.0",
     "prettier": "^3.2.5",
     "ts-loader": "^9.5.1",
+    "tsc-alias": "^1.8.8",
+    "@types/node": "^20.11.17",
     "tsx": "^4.7.0"
   },
   "dependencies": {

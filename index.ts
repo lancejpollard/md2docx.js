@@ -15,9 +15,7 @@ export type Encoding = 'buffer' | 'blob' | 'base64'
 export default async function md2docx<E extends Encoding>(
   text: string,
   encoding: E,
-): Promise<
-  E extends 'blob' ? Blob : E extends 'buffer' ? Buffer : string
-> {
+) {
   const document: Array<any> = []
 
   const HEADING: Record<number, any> = {

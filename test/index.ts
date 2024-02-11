@@ -29,5 +29,7 @@ _**bold with italics**_.
 `,
   'buffer',
 ).then(buffer => {
-  fs.writeFileSync('test/md.docx', buffer)
+  if (buffer instanceof Buffer) {
+    fs.writeFileSync('test/md.docx', buffer)
+  }
 })
